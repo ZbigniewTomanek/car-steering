@@ -3,6 +3,12 @@
 
 <Car>:
     size: 65, 30
+	visible: True
+	
+	size_hint_x: 1 if self.visible else 0
+	opacity: 1 if self.visible else 0
+	disabled: not self.visible
+			
     canvas:
         Rectangle:
 			source: 'car.png'
@@ -18,7 +24,8 @@
 
 <CarSimulation>:
 	car: car
-	
+	keep_data: True
+
     	
 	Car:
 		id: car
