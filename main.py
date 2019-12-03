@@ -15,6 +15,7 @@ from kivy.clock import Clock
 from math import sin, cos, radians
 from kivy.core.window import Window
 from kivy.graphics import Color, Ellipse, Line
+from steering import collide_with_track
 
 import imageio
 
@@ -32,11 +33,31 @@ class Car(Widget):
         self.vx, self.vy = Vector(*self.velocity).rotate(angle)
         self.angle += round(angle)
         
+        self.
+        
     
     def move(self, delta):
         self.vx += cos(radians(self.angle)) * delta
         self.vy += sin(radians(self.angle)) * delta
         self.pos = Vector(*self.velocity) + self.pos
+
+class TrackPainter(Widget):
+    enabled = True
+    
+    def on_touch_down(self, touch):
+        if self.enabled:
+            with self.canvas:
+                Color(1, 1, 1)
+                touch.ud['line'] = Line(points=(touch.x, touch.y))
+            
+    def on_touch_move(self, touch):
+        if self.enabled:
+            touch.ud['line'].points += [touch.x, touch.y]
+        
+    def load_bitmap(self):
+        self.export_to_png(MAP_FILENAME)
+        return imageio.imread(MAP_FILENAME)
+    
         
 class CarSimulation(Widget):
     car = ObjectProperty(None)
@@ -47,31 +68,30 @@ class CarSimulation(Widget):
         self._keyboard = Window.request_keyboard(self._keyboard_closed, self)
         self._keyboard.bind(on_key_down=self._on_keyboard_down)
         
-    def on_touch_down(self, touch):
-        with self.canvas:
-            Color(1, 1, 1)
-            touch.ud['line'] = Line(points=(touch.x, touch.y))
-            
-    def on_touch_move(self, touch):
-        touch.ud['line'].points += [touch.x, touch.y]
+        self.tpainter = TrackPainter(size=(800, 600))
+        self.add_widget(self.tpainter)
+        
+        print(self.size)
+        print(self.tpainter.size)
+        
         
     def _keyboard_closed(self):
         self._keyboard.unbind(on_key_down=self._on_keyboard_down)
         self._keyboard = None
         
-    def load_bitmap(self):
-        self.car.visible = False
-        self.export_to_png(MAP_FILENAME)
-        self.car.visible = True
-        self.bitmap = imageio.imread(MAP_FILENAME)
+
 
     def _on_keyboard_down(self, keyboard, keycode, text, modifiers):
         c = keycode[1]
-
+        
         if self.bitmap is None:
             if c == 'spacebar':
-                self.load_bitmap()
+                self.bitmap = self.tpainter.load_bitmap()
+                self.tpainter.enabled = False
+            elif c == 'backspace':
+                self.tpainter.canvas.clear()
         else:
+            print(self.car.pos)
             if c == 'w':
                 self.car.move(1)
             elif c == 's':
@@ -88,8 +108,9 @@ class CarSimulation(Widget):
         self.car.vy = 0
 
     def update(self, dt):
-   
         self.car.move(0)
+        if self.bitmap is not None:
+            print(collide_with_track(self.bitmap, self.car.pos, self.car.size, self.car.angle))
         
         if (self.car.y < 0) or (self.car.top > self.height):
             self.car.vy = 0
