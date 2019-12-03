@@ -1,0 +1,25 @@
+#:kivy 1.0.9
+
+
+<Car>:
+    size: 65, 30
+    canvas:
+        Rectangle:
+			source: 'car.png'
+            pos: self.pos
+            size: self.size
+	canvas.before:
+		PushMatrix
+		Rotate:
+			angle: self.angle
+			origin: root.center
+    canvas.after:
+        PopMatrix
+
+<CarSimulation>:
+	car: car
+	
+    	
+	Car:
+		id: car
+		center: self.parent.center
