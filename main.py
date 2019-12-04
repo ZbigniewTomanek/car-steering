@@ -33,7 +33,6 @@ class Car(Widget):
         self.vx, self.vy = Vector(*self.velocity).rotate(angle)
         self.angle += round(angle)
         
-        self.
         
     
     def move(self, delta):
@@ -47,7 +46,7 @@ class TrackPainter(Widget):
     def on_touch_down(self, touch):
         if self.enabled:
             with self.canvas:
-                Color(1, 1, 1)
+                Color(1, 1, 0)
                 touch.ud['line'] = Line(points=(touch.x, touch.y))
             
     def on_touch_move(self, touch):
@@ -56,7 +55,7 @@ class TrackPainter(Widget):
         
     def load_bitmap(self):
         self.export_to_png(MAP_FILENAME)
-        return imageio.imread(MAP_FILENAME)
+        return imageio.imread(MAP_FILENAME)[:,:,0]
     
         
 class CarSimulation(Widget):
@@ -72,7 +71,6 @@ class CarSimulation(Widget):
         self.add_widget(self.tpainter)
         
         print(self.size)
-        print(self.tpainter.size)
         
         
     def _keyboard_closed(self):
@@ -110,7 +108,10 @@ class CarSimulation(Widget):
     def update(self, dt):
         self.car.move(0)
         if self.bitmap is not None:
-            print(collide_with_track(self.bitmap, self.car.pos, self.car.size, self.car.angle))
+            print(collide_with_track(self.bitmap, self.car))
+                
+                
+               
         
         if (self.car.y < 0) or (self.car.top > self.height):
             self.car.vy = 0
