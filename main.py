@@ -15,7 +15,7 @@ from kivy.clock import Clock
 from math import sin, cos, radians
 from kivy.core.window import Window
 from kivy.graphics import Color, Line
-from steering import collide_with_track
+from steering import collide_with_track, Plotter
 
 import imageio
 
@@ -65,6 +65,7 @@ class TrackPainter(Widget):
 class CarSimulation(Widget):
     car = ObjectProperty(None)
     bitmap = None
+    p = Plotter()
     
     def __init__(self, **kwargs):
         super(CarSimulation, self).__init__(**kwargs)
@@ -98,9 +99,13 @@ class CarSimulation(Widget):
             elif c == 's':
                 self.car.accelerate(-1)
             elif c == 'd':
+                err = collide_with_track(self.bitmap, self.car)
                 self.car.turn(-5)
+                self.p.plot(err, -5)
             elif c == 'a':
+                err = collide_with_track(self.bitmap, self.car)
                 self.car.turn(5)
+                self.p.plot(err, 5)
         return True
     
     def init(self):
@@ -112,6 +117,7 @@ class CarSimulation(Widget):
         self.car.move()
         if self.bitmap is not None:
             err = collide_with_track(self.bitmap, self.car)
+            self.p.plot(err, 0)
             if err != 0:
                 print(err)
                 self.car.vy = 0

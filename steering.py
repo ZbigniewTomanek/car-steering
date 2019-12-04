@@ -61,8 +61,40 @@ def collide_with_track(layer, car):
                 
     return err
 
-def plot(time, err, error, steer):
-    pass
+class Plotter:
+    t = 0
+    a_err = 0
+    
+    time = []
+    steering = []
+    error = []
+    err = []
+    
+    
+    def plot(self, err_t, steer):
+        self.a_err += err_t
+        self.time.append(self.t)
+        self.t += 1
+        self.err.append(err_t)
+        self.error.append(self.a_err)
+        self.steering.append(steer)
+        
+        plt.clf()
+        ax = plt.subplot(311)
+        
+        ax.set_title('Sterowanie')
+        ax.plot(self.time, self.steering, color='g')
+    
+        ax = plt.subplot(312)
+        ax.set_title('Blad chwilowy')
+        ax.scatter(self.time, self.err, color='r')
+    
+        ax = plt.subplot(313)
+        ax.set_title('Blad calkowity')
+        ax.plot(self.time, self.error)
+    
+        plt.pause(0.01)
+    
 
 class PID:
     error = 0
@@ -82,4 +114,4 @@ class PID:
         
         self.error += err
         
-        return int(kp * err) + int((ki * self.error)/self.time)
+        return int(self.kp * err) + int((self.ki * self.error)/self.time)
