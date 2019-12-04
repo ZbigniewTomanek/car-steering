@@ -61,6 +61,7 @@ def collide_with_track(layer, car):
                 
     return err
 
+
 class Plotter:
     t = 0
     a_err = 0
@@ -70,8 +71,7 @@ class Plotter:
     error = []
     err = []
     
-    
-    def plot(self, err_t, steer):
+    def refresh(self, err_t, steer):
         self.a_err += err_t
         self.time.append(self.t)
         self.t += 1
@@ -79,6 +79,9 @@ class Plotter:
         self.error.append(self.a_err)
         self.steering.append(steer)
         
+    
+    
+    def plot(self):
         plt.clf()
         ax = plt.subplot(311)
         

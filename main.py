@@ -101,11 +101,13 @@ class CarSimulation(Widget):
             elif c == 'd':
                 err = collide_with_track(self.bitmap, self.car)
                 self.car.turn(-5)
-                self.p.plot(err, -5)
+                self.p.refresh(err, -5)
             elif c == 'a':
                 err = collide_with_track(self.bitmap, self.car)
                 self.car.turn(5)
-                self.p.plot(err, 5)
+                self.p.refresh(err, 5)
+            elif c == 'p':
+                self.p.plot()
         return True
     
     def init(self):
@@ -117,7 +119,7 @@ class CarSimulation(Widget):
         self.car.move()
         if self.bitmap is not None:
             err = collide_with_track(self.bitmap, self.car)
-            self.p.plot(err, 0)
+            self.p.refresh(err, 0)
             if err != 0:
                 print(err)
                 self.car.vy = 0
