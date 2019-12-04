@@ -16,7 +16,6 @@ from math import sin, cos, radians
 from kivy.core.window import Window
 from kivy.graphics import Color, Line
 from steering import collide_with_track, Plotter
-
 import imageio
 
 MAP_FILENAME = 'track.png'
@@ -32,7 +31,7 @@ class Car(Widget):
     def turn(self, angle):
         self.vx, self.vy = Vector(*self.velocity).rotate(angle)
         self.angle += round(angle)
-        
+        self.move()
         
     def move(self):
         self.pos = Vector(*self.velocity) + self.pos
@@ -72,6 +71,8 @@ class CarSimulation(Widget):
         self._keyboard = Window.request_keyboard(self._keyboard_closed, self)
         self._keyboard.bind(on_key_down=self._on_keyboard_down)
         
+        Window.size = (800, 600)
+        
         self.tpainter = TrackPainter(size=(800, 600))
         self.add_widget(self.tpainter)
         
@@ -93,7 +94,6 @@ class CarSimulation(Widget):
             elif c == 'backspace':
                 self.tpainter.canvas.clear()
         else:
-            print(self.car.pos)
             if c == 'w':
                 self.car.accelerate(1)
             elif c == 's':
@@ -103,9 +103,9 @@ class CarSimulation(Widget):
                 self.car.turn(-5)
                 self.p.refresh(err, -5)
             elif c == 'a':
-                err = collide_with_track(self.bitmap, self.car)
+                # err = collide_with_track(self.bitmap, self.car)
                 self.car.turn(5)
-                self.p.refresh(err, 5)
+                #self.p.refresh(err, 5)
             elif c == 'p':
                 self.p.plot()
         return True

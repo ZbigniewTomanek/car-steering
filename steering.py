@@ -51,14 +51,13 @@ def collide_with_track(layer, car):
             for k in range(4):
                if not is_point_on_right(x[k], x[(k+1)%4], i, y[k], y[(k+1)%4], j):
                    continue
-            if i < lw and j < lh:
+            if i < lw and 0 < j < lh:
                 if layer[lh-j][i] > 0:
                     if is_point_on_right(cx, cx-vc.x, i, cy, cy-vc.y, j):
                         err += 1
                     else:
                         err -= 1
                        
-                
     return err
 
 
@@ -80,7 +79,6 @@ class Plotter:
         self.steering.append(steer)
         
     
-    
     def plot(self):
         plt.clf()
         ax = plt.subplot(311)
@@ -90,7 +88,7 @@ class Plotter:
     
         ax = plt.subplot(312)
         ax.set_title('Blad chwilowy')
-        ax.scatter(self.time, self.err, color='r')
+        ax.plot(self.time, self.err, color='r')
     
         ax = plt.subplot(313)
         ax.set_title('Blad calkowity')
