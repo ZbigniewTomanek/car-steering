@@ -6,6 +6,7 @@ Created on Tue Dec  3 14:24:54 2019
 """
 
 from kivy.vector import Vector
+from matplotlib import pyplot as plt
 
 def is_point_on_right(x1, x2, xA, y1, y2, yA):
     v1 = (x2-x1, y2-y1)
@@ -15,7 +16,7 @@ def is_point_on_right(x1, x2, xA, y1, y2, yA):
     return xp > 0
 
 def collide_with_track(layer, car):
-    # v1 is the vector on the top of bbox
+
     cx, cy = car.center
     w, h = car.size
     angle = car.angle
@@ -42,6 +43,9 @@ def collide_with_track(layer, car):
     
     lh, lw = layer.shape
     
+    err = 0
+    vc = Vector(0, 1).rotate(angle) #vector fo cheking side of point towards center
+    
     for i in range(x_min, x_max+1):
         for j in range(y_min, y_max+1):
             for k in range(4):
@@ -49,7 +53,33 @@ def collide_with_track(layer, car):
                    continue
             if i < lw and j < lh:
                 if layer[lh-j][i] > 0:
-                    return True
+                    if is_point_on_right(cx, cx-vc.x, i, cy, cy-vc.y, j):
+                        err += 1
+                    else:
+                        err -= 1
                        
                 
-    return False
+    return err
+
+def plot(time, err, error, steer):
+    pass
+
+class PID:
+    error = 0
+    time = 1
+    
+    def __init__(self, ki, kp):
+        self.ki = ki
+        self.kp = kp
+    
+    def steer(self, err):
+        """
+        err is the count of pixels that are hit by vehicle. 
+        > 0 if they are on right and < 0 otherwise
+        
+        returns value to turn in angles
+        """
+        
+        self.error += err
+        
+        return int(kp * err) + int((ki * self.error)/self.time)

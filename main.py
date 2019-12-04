@@ -14,7 +14,7 @@ from kivy.vector import Vector
 from kivy.clock import Clock
 from math import sin, cos, radians
 from kivy.core.window import Window
-from kivy.graphics import Color, Ellipse, Line
+from kivy.graphics import Color, Line
 from steering import collide_with_track
 
 import imageio
@@ -34,11 +34,15 @@ class Car(Widget):
         self.angle += round(angle)
         
         
-    
-    def move(self, delta):
+    def move(self):
+        self.pos = Vector(*self.velocity) + self.pos
+        
+    def accelerate(self, delta):
         self.vx += cos(radians(self.angle)) * delta
         self.vy += sin(radians(self.angle)) * delta
-        self.pos = Vector(*self.velocity) + self.pos
+        self.move()
+        
+        
 
 class TrackPainter(Widget):
     enabled = True
@@ -78,7 +82,6 @@ class CarSimulation(Widget):
         self._keyboard = None
         
 
-
     def _on_keyboard_down(self, keyboard, keycode, text, modifiers):
         c = keycode[1]
         
@@ -91,9 +94,9 @@ class CarSimulation(Widget):
         else:
             print(self.car.pos)
             if c == 'w':
-                self.car.move(1)
+                self.car.accelerate(1)
             elif c == 's':
-                self.car.move(-1)
+                self.car.accelerate(-1)
             elif c == 'd':
                 self.car.turn(-5)
             elif c == 'a':
@@ -106,13 +109,15 @@ class CarSimulation(Widget):
         self.car.vy = 0
 
     def update(self, dt):
-        self.car.move(0)
+        self.car.move()
         if self.bitmap is not None:
-            print(collide_with_track(self.bitmap, self.car))
+            err = collide_with_track(self.bitmap, self.car)
+            if err != 0:
+                print(err)
+                self.car.vy = 0
+                self.car.vx = 0
+           
                 
-                
-               
-        
         if (self.car.y < 0) or (self.car.top > self.height):
             self.car.vy = 0
             self.car.vx = 0
