@@ -7,6 +7,7 @@ Created on Tue Dec  3 14:24:54 2019
 
 from kivy.vector import Vector
 from matplotlib import pyplot as plt
+import time
 
 def is_point_on_right(x1, x2, xA, y1, y2, yA):
     v1 = (x2-x1, y2-y1)
@@ -98,21 +99,53 @@ class Plotter:
     
 
 class PID:
-    error = 0
-    time = 1
+    integral_sum = 0
     
-    def __init__(self, ki, kp):
-        self.ki = ki
+    sample_time = 0
+    setpoint = 0
+    last_time = 0
+    last_input = 0
+    
+    o_min = 0
+    o_max = 0
+    
+    def __init__(self, kp, ki, kd, out_min, out_max, sample=50):
+        self.sample_time = sample
+        
+        if out_min > out_max:
+            raise ValueError
+            
+        self.o_min = out_min
+        self.o_max = out_max
+        self.set_tunings(kp, ki, kd)
+        
+    def set_tunings(self, kp, ki, kd):
+        sample_in_sec = self.sample_time / 1000
         self.kp = kp
+        self.ki = ki * sample_in_sec
+        self.kd = kd / sample_in_sec
+        
+        
+    def is_ready(self):
+        return time.time() - self.last_time >= self.sample_time
     
-    def steer(self, err):
-        """
-        err is the count of pixels that are hit by vehicle. 
-        > 0 if they are on right and < 0 otherwise
+    def steer(self, inpt):
+        err = self.setpoint - inpt
         
-        returns value to turn in angles
-        """
+        self.integral_sum += self.ki * err
+        if self.integral_sum > self.o_max:
+            self.integral_sum = self.o_max
         
-        self.error += err
+        d_input = inpt - self.last_input
         
-        return int(self.kp * err) + int((self.ki * self.error)/self.time)
+        output = self.kp * err + self.integral_sum + self.kd * d_input
+        
+        if output > self.o_max:
+            output = self.o_max
+        elif output < self.o_min:
+            output = self.o_min
+        
+        self.last_time = time.time()
+        self.last_input = inpt
+        
+        return output

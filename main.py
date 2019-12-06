@@ -64,7 +64,9 @@ class TrackPainter(Widget):
 class CarSimulation(Widget):
     car = ObjectProperty(None)
     bitmap = None
+    
     p = Plotter()
+    controller = None
     
     def __init__(self, **kwargs):
         super(CarSimulation, self).__init__(**kwargs)
@@ -75,9 +77,7 @@ class CarSimulation(Widget):
         
         self.tpainter = TrackPainter(size=(800, 600))
         self.add_widget(self.tpainter)
-        
-        print(self.size)
-        
+                
         
     def _keyboard_closed(self):
         self._keyboard.unbind(on_key_down=self._on_keyboard_down)
@@ -87,27 +87,31 @@ class CarSimulation(Widget):
     def _on_keyboard_down(self, keyboard, keycode, text, modifiers):
         c = keycode[1]
         
-        if self.bitmap is None:
+        if self.bitmap is None: # drawning mode
             if c == 'spacebar':
                 self.bitmap = self.tpainter.load_bitmap()
                 self.tpainter.enabled = False
             elif c == 'backspace':
                 self.tpainter.canvas.clear()
-        else:
-            if c == 'w':
-                self.car.accelerate(1)
-            elif c == 's':
-                self.car.accelerate(-1)
-            elif c == 'd':
-                err = collide_with_track(self.bitmap, self.car)
-                self.car.turn(-5)
-                self.p.refresh(err, -5)
-            elif c == 'a':
-                # err = collide_with_track(self.bitmap, self.car)
-                self.car.turn(5)
-                #self.p.refresh(err, 5)
-            elif c == 'p':
+        else: # ride mode
+            if self.controller is None: # manual mode
+                if c == 'w':
+                    self.car.accelerate(1)
+                elif c == 's':
+                    self.car.accelerate(-1)
+                elif c == 'd':
+                    err = collide_with_track(self.bitmap, self.car)
+                    self.car.turn(-5)
+                    self.p.refresh(err, -5)
+                elif c == 'a': 
+                    err = collide_with_track(self.bitmap, self.car)
+                    self.car.turn(5)
+                    self.p.refresh(err, 5)
+                    
+            if c == 'p':
                 self.p.plot()
+        
+        
         return True
     
     def init(self):
@@ -116,14 +120,22 @@ class CarSimulation(Widget):
         self.car.vy = 0
 
     def update(self, dt):
-        self.car.move()
         if self.bitmap is not None:
+            self.car.move()
             err = collide_with_track(self.bitmap, self.car)
-            self.p.refresh(err, 0)
-            if err != 0:
-                print(err)
-                self.car.vy = 0
-                self.car.vx = 0
+            
+            dec = 0
+            if self.controller is not None:
+                dec = self.controller.steer(err)
+            else:
+                if err != 0: # if car is in manual mode stop the car on collision
+                    print(err)
+                    self.car.vy = 0
+                    self.car.vx = 0
+                
+                
+            self.p.refresh(err, dec)
+            
            
                 
         if (self.car.y < 0) or (self.car.top > self.height):
