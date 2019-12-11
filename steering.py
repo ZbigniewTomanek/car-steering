@@ -8,6 +8,7 @@ Created on Tue Dec  3 14:24:54 2019
 from kivy.vector import Vector
 from matplotlib import pyplot as plt
 import time
+import math
 
 def is_point_on_right(x1, x2, xA, y1, y2, yA):
     v1 = (x2-x1, y2-y1)
@@ -44,8 +45,9 @@ def collide_with_track(layer, car):
     
     lh, lw = layer.shape
     
-    err = 0
-    vc = Vector(0, 1).rotate(angle) #vector fo cheking side of point towards center
+    #err = 0
+    #vc = Vector(0, 1).rotate(angle) #vector fo cheking side of point towards center
+    #vcp = Vector(-1, 0).rotate(angle)
     
     for i in range(x_min, x_max+1):
         for j in range(y_min, y_max+1):
@@ -54,12 +56,75 @@ def collide_with_track(layer, car):
                    continue
             if i < lw and 0 < j < lh:
                 if layer[lh-j][i] > 0:
-                    if is_point_on_right(cx, cx-vc.x, i, cy, cy-vc.y, j):
-                        err += 1
-                    else:
-                        err -= 1
+                    return True
+                    
+                    #if is_point_on_right(cx, cx - vcp.x, i, cy, cy - vcp.y, j):
+                        #print('Z przodu!')
+                        #if is_point_on_right(cx, cx-vc.x, i, cy, cy-vc.y, j):
+                            #print('prawo')
+                            #err -= 1
+                        #else:
+                            #print('lewo')
+                            #err += 1
+                    #else:
+                        #print('z tylu')
                        
-    return err
+    return False
+
+
+def count_ray_error(layer, car, max_distance=40, angle_delta=20):
+    cx, cy = car.center
+    cw, ch = car.size
+    lh, lw = layer.shape
+    err = 0
+    
+    min_d = round(math.sqrt((cw/2)**2 + (ch/2)**2)) # dystans od którego będzie sprawdzany
+    sv = Vector(0, -1).rotate(car.angle)
+    
+    points_x = []
+    points_y = []
+    
+    for angle in range(0, 181, angle_delta):
+        #shift center outside a car
+        sx = cx + sv.x * min_d
+        sy = cy + sv.y * min_d
+        dis = max_distance
+        
+        found = False
+        for d in range(0, max_distance):
+            py = int(sy + sv.y * d)
+            px = int(sx + sv.x * d)
+            
+            if px >= lw or lh-py >= lh:
+                points_x.append(px)
+                points_y.append(py)
+                found = True
+                dis = d
+                break
+                
+            if layer[lh-py][px] > 0:
+                # ray found nearest point
+                points_x.append(px)
+                points_y.append(py)
+                found = True
+                dis = d
+                break
+        
+        if not found:
+            points_x.append(sx + sv.x * max_distance)
+            points_y.append(sy + sv.y * max_distance)
+            
+        sv = sv.rotate(angle_delta)
+        
+        if angle < 90:
+            err += (dis - max_distance)**2
+        else:
+            err -= (dis - max_distance)**2
+            
+    return err, list(zip(points_x, points_y))
+                
+            
+    
 
 
 class Plotter:
@@ -109,7 +174,7 @@ class PID:
     o_min = 0
     o_max = 0
     
-    def __init__(self, kp, ki, kd, out_min, out_max, sample=50):
+    def __init__(self, kp, ki, kd, out_min, out_max, sample=0.1):
         self.sample_time = sample
         
         if out_min > out_max:

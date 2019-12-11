@@ -22,11 +22,31 @@
     canvas.after:
         PopMatrix
 
+
 <CarSimulation>:
 	car: car
+	
 	keep_data: True
 
-    	
 	Car:
 		id: car
 		center: self.parent.center
+		
+	Label:
+		text: '' if not root.pid else 'kp: ' + str(round(root.kp, 5))
+		center_x: root.width * 1/10
+        top: root.top - 10
+	
+	Label:
+		text: '' if not root.pid else 'ki: ' + str(round(root.ki, 5))
+		center_x: root.width * 2/10
+        top: root.top - 10
+		
+	Label:
+
+		text: '' if not root.pid else 'kd: ' + str(round(root.kd, 5))
+		center_x: root.width * 3/10
+        top: root.top - 10
+	
+	
+		
