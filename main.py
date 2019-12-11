@@ -7,7 +7,6 @@ Created on Tue Dec  3 10:17:02 2019
 
 from kivy.app import App
 from kivy.uix.widget import Widget
-from kivy.uix.boxlayout import BoxLayout
 from kivy.properties import (
         NumericProperty, ReferenceListProperty, ObjectProperty, BooleanProperty
         )
@@ -20,6 +19,7 @@ from steering import collide_with_track, Plotter, PID, count_ray_error
 import imageio
 
 MAP_FILENAME = 'track.png'
+WINDOW_SIZE = 800, 800
 
 
 class Car(Widget):
@@ -42,8 +42,6 @@ class Car(Widget):
         self.vy += sin(radians(self.angle)) * delta
         self.move()
         
-        
-
 class TrackPainter(Widget):
     lines = []
     
@@ -110,9 +108,9 @@ class CarSimulation(Widget):
         self._keyboard = Window.request_keyboard(self._keyboard_closed, self)
         self._keyboard.bind(on_key_down=self._on_keyboard_down)
         
-        Window.size = (800, 600)
+        Window.size = WINDOW_SIZE
         
-        self.tpainter = TrackPainter(size=(800, 600))
+        self.tpainter = TrackPainter(size=WINDOW_SIZE)
         self.add_widget(self.tpainter)
                 
         
@@ -125,12 +123,7 @@ class CarSimulation(Widget):
         c = keycode[1]
         
         if not self.pid: # manual mode
-            if c == 'w':
-
-                self.car.accelerate(self.speed)
-            elif c == 's':
-                self.car.accelerate(-self.speed)
-            elif c == 'd':
+            if c == 'd':
                 err = collide_with_track(self.bitmap, self.car)
                 self.car.turn(-5)
                 self.p.refresh(err, -5)
@@ -142,8 +135,13 @@ class CarSimulation(Widget):
                 print('pid mode')
                 self.init_pid(-45, 45)
                 self.pid = True
+                return True
+            
                 
-                
+        if c == 'w':
+            self.car.accelerate(self.speed)
+        elif c == 's':
+            self.car.accelerate(-self.speed)
         elif c == 'k':
              print('manual mode')
              self.pid = False
@@ -154,6 +152,7 @@ class CarSimulation(Widget):
             self.set_pid(self.K/1.2)
         if c == 'p':
             self.p.plot()
+            Window.size = WINDOW_SIZE #to stop resizing caused by matplotlib
         elif c == 'spacebar':
             self.car.center = self.center
             self.car.vx = 0
@@ -231,7 +230,6 @@ class CarSimulation(Widget):
 
 class CarApp(App):
     def build(self):
-        
         sim = CarSimulation()
         sim.init()
         Clock.schedule_interval(sim.update, 1.0/60.0)

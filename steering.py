@@ -95,7 +95,7 @@ def count_ray_error(layer, car, max_distance=40, angle_delta=20):
             py = int(sy + sv.y * d)
             px = int(sx + sv.x * d)
             
-            if px >= lw or lh-py >= lh:
+            if px >= lw or px < 0 or lh-py <= 0 or lh-py >= lh:
                 points_x.append(px)
                 points_y.append(py)
                 found = True
